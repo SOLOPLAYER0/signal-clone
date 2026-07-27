@@ -180,12 +180,3 @@ assignment's allowed placeholder list.
 - Password hashing uses SHA-256 for simplicity in this demo; a production
   build would use bcrypt/argon2 with per-user salts.
 
-## Deployment
-
-- **Backend:** any host that runs a long-lived Python process with
-  WebSocket support (Render, Railway, Fly.io). Uses SQLite by default —
-  fine for a demo, but swap `DATABASE_URL` in `backend/app/database.py`
-  for Postgres if the platform's disk isn't persistent.
-- **Frontend:** Vercel — set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL`
-  to the deployed backend's HTTPS/WSS URL in the project's environment
-  variables.
