@@ -99,6 +99,18 @@ class ConversationOut(BaseModel):
         from_attributes = True
 
 
+class ReactionOut(BaseModel):
+    emoji: str
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ReactionToggle(BaseModel):
+    emoji: str
+
+
 class MessageOut(BaseModel):
     id: int
     conversation_id: int
@@ -106,6 +118,7 @@ class MessageOut(BaseModel):
     content: str
     status: str
     created_at: datetime
+    reactions: List[ReactionOut] = []
 
     class Config:
         from_attributes = True

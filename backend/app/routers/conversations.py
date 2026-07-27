@@ -126,7 +126,9 @@ def create_group(payload: schemas.ConversationCreateGroup, db: Session = Depends
 @router.get("/{conversation_id}/messages", response_model=list[schemas.MessageOut])
 def get_messages(conversation_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     _require_member(db, conversation_id, current_user.id)
-    messages = db.query(models.Message).filter(
+    messages = db.query(models.Message).options(
+        joinedload(models.Message.reactions)
+    ).filter(
         models.Message.conversation_id == conversation_id
     ).order_by(models.Message.created_at).all()
     return messages
@@ -251,3 +253,40 @@ async def remove_member(conversation_id: int, user_id: int, db: Session = Depend
     remaining_ids = _member_ids(db, conversation_id)
     await manager.send_to_users(remaining_ids + [user_id], {"type": "conversation_updated", "conversation_id": conversation_id})
     return {"ok": True}
+
+
+@router.post("/{conversation_id}/messages/{message_id}/reactions", response_model=list[schemas.ReactionOut])
+async def toggle_reaction(conversation_id: int, message_id: int, payload: schemas.ReactionToggle, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    _require_member(db, conversation_id, current_user.id)
+
+    message = db.query(models.Message).filter(
+        models.Message.id == message_id,
+        models.Message.conversation_id == conversation_id,
+    ).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    existing = db.query(models.MessageReaction).filter(
+        models.MessageReaction.message_id == message_id,
+        models.MessageReaction.user_id == current_user.id,
+        models.MessageReaction.emoji == payload.emoji,
+    ).first()
+
+    if existing:
+        db.delete(existing)
+    else:
+        db.add(models.MessageReaction(message_id=message_id, user_id=current_user.id, emoji=payload.emoji))
+    db.commit()
+
+    reactions = db.query(models.MessageReaction).filter(models.MessageReaction.message_id == message_id).all()
+    reactions_out = [schemas.ReactionOut.model_validate(r) for r in reactions]
+
+    member_ids = _member_ids(db, conversation_id)
+    await manager.send_to_users(member_ids, {
+        "type": "reaction_updated",
+        "conversation_id": conversation_id,
+        "message_id": message_id,
+        "reactions": [r.model_dump() for r in reactions_out],
+    })
+
+    return reactions_out

@@ -31,6 +31,11 @@ export interface Conversation {
   unread_count: number;
 }
 
+export interface Reaction {
+  emoji: string;
+  user_id: number;
+}
+
 export interface Message {
   id: number;
   conversation_id: number;
@@ -38,4 +43,5 @@ export interface Message {
   content: string;
   status: "sending" | "sent" | "delivered" | "read";
   created_at: string;
+  reactions: Reaction[];
 }

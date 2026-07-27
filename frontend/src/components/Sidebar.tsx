@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SquarePen, Users, LogOut, Settings } from "lucide-react";
+import { Search, SquarePen, Users, LogOut, Settings, Moon, Sun } from "lucide-react";
 import { Conversation, User } from "@/lib/types";
 import { conversationTitle, otherMember, formatTime } from "@/lib/format";
+import { useTheme } from "@/lib/theme-context";
 import Avatar, { initials } from "./Avatar";
 
 export default function Sidebar({
@@ -26,6 +27,7 @@ export default function Sidebar({
   typingByConv: Record<number, Set<number>>;
 }) {
   const [query, setQuery] = useState("");
+  const { theme, toggleTheme } = useTheme();
 
   const filtered = useMemo(() => {
     if (!query.trim()) return conversations;
@@ -44,6 +46,9 @@ export default function Sidebar({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <button onClick={toggleTheme} title="Toggle dark mode" className="p-2 rounded-full hover:bg-[var(--row-hover)] text-[var(--text-secondary)]">
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           <button onClick={onNewGroup} title="New group" className="p-2 rounded-full hover:bg-[var(--row-hover)] text-[var(--text-secondary)]">
             <Users size={18} />
           </button>

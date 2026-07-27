@@ -15,6 +15,7 @@ export default function ChatWindow({
   onSend,
   onTyping,
   onOpenInfo,
+  onReact,
 }: {
   conversation: Conversation;
   messages: Message[];
@@ -23,10 +24,12 @@ export default function ChatWindow({
   onSend: (content: string) => void;
   onTyping: (isTyping: boolean) => void;
   onOpenInfo: () => void;
+  onReact: (messageId: number, emoji: string) => void;
 }) {
   const [draft, setDraft] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const title = conversationTitle(conversation, currentUser.id);
   const other = conversation.type === "direct" ? otherMember(conversation, currentUser.id) : undefined;
@@ -40,6 +43,12 @@ export default function ChatWindow({
     onTyping(true);
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => onTyping(false), 1500);
+
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 128) + "px";
+    }
   }
 
   function handleSend() {
@@ -49,6 +58,7 @@ export default function ChatWindow({
     setDraft("");
     onTyping(false);
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   }
 
   const membersById = new Map(conversation.members.map((m) => [m.user.id, m.user]));
@@ -61,7 +71,7 @@ export default function ChatWindow({
   return (
     <div className="flex-1 flex flex-col h-full min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--sidebar-border)] bg-white">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]">
         <button onClick={onOpenInfo} className="flex items-center gap-3 text-left">
           <Avatar name={title} color={conversation.avatar_color} online={other?.is_online} />
           <div>
@@ -107,7 +117,7 @@ export default function ChatWindow({
             <div key={m.id}>
               {showDivider && (
                 <div className="flex items-center justify-center my-3">
-                  <span className="text-[11px] bg-white text-[var(--text-secondary)] px-3 py-1 rounded-full shadow-sm">
+                  <span className="text-[11px] bg-[var(--sidebar-bg)] text-[var(--text-secondary)] px-3 py-1 rounded-full shadow-sm">
                     {new Date(m.created_at + "Z").toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}
                   </span>
                 </div>
@@ -118,6 +128,8 @@ export default function ChatWindow({
                 showSender={conversation.type === "group" && !prevSameSender}
                 senderName={sender?.display_name}
                 senderColor={sender?.avatar_color}
+                currentUserId={currentUser.id}
+                onReact={(emoji) => onReact(m.id, emoji)}
               />
             </div>
           );
@@ -125,7 +137,7 @@ export default function ChatWindow({
 
         {typingNames.length > 0 && (
           <div className="flex justify-start px-1 mt-1">
-            <div className="bg-white border border-[var(--sidebar-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm flex items-center gap-2">
+            <div className="bg-[var(--bubble-received)] border border-[var(--sidebar-border)] rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm flex items-center gap-2">
               <span className="text-xs text-[var(--text-secondary)]">{typingNames.join(", ")}</span>
               <span className="flex gap-0.5">
                 <span className="typing-dot w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)] inline-block" />
@@ -139,12 +151,13 @@ export default function ChatWindow({
       </div>
 
       {/* Composer */}
-      <div className="flex items-end gap-2 px-4 py-3 border-t border-[var(--sidebar-border)] bg-white">
+      <div className="flex items-end gap-2 px-4 py-3 border-t border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]">
         <button title="Attachments — coming soon" className="p-2 rounded-full hover:bg-[var(--row-hover)] text-[var(--text-secondary)]">
           <Paperclip size={20} />
         </button>
         <div className="flex-1 flex items-end bg-[var(--row-hover)] rounded-2xl px-3 py-2">
           <textarea
+            ref={textareaRef}
             value={draft}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={(e) => {

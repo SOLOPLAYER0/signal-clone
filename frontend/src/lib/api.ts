@@ -94,6 +94,12 @@ export const api = {
 
   removeMember: (conversationId: number, userId: number) =>
     request<{ ok: boolean }>(`/conversations/${conversationId}/members/${userId}`, { method: "DELETE" }),
+
+  toggleReaction: (conversationId: number, messageId: number, emoji: string) =>
+    request<{ emoji: string; user_id: number }[]>(`/conversations/${conversationId}/messages/${messageId}/reactions`, {
+      method: "POST",
+      body: JSON.stringify({ emoji }),
+    }),
 };
 
 export function setToken(token: string) {

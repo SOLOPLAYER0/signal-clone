@@ -10,6 +10,7 @@ export type SocketEvent =
   | { type: "conversation_updated"; conversation_id: number }
   | { type: "typing"; conversation_id: number; user_id: number; is_typing: boolean }
   | { type: "read_receipt"; conversation_id: number; reader_id: number; up_to_message_id: number }
+  | { type: "reaction_updated"; conversation_id: number; message_id: number; reactions: { emoji: string; user_id: number }[] }
   | { type: "presence"; user_id: number; online: boolean; last_seen?: string }
   | { type: "pong" };
 

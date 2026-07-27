@@ -86,7 +86,7 @@ export default function LoginPage() {
           <p className="text-sm text-[var(--text-secondary)] mt-1">Private messaging, simplified for a demo build</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-[var(--sidebar-border)] p-6">
+        <div className="bg-[var(--sidebar-bg)] rounded-2xl shadow-sm border border-[var(--sidebar-border)] p-6">
           <div className="flex mb-6 bg-[var(--row-hover)] rounded-lg p-1">
             <button
               onClick={() => { setMode("login"); setError(null); }}

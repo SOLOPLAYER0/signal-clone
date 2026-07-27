@@ -98,6 +98,17 @@ export default function ChatPage() {
             ),
           };
         });
+      } else if (evt.type === "reaction_updated") {
+        setMessagesByConv((prev) => {
+          const existing = prev[evt.conversation_id];
+          if (!existing) return prev;
+          return {
+            ...prev,
+            [evt.conversation_id]: existing.map((m) =>
+              m.id === evt.message_id ? { ...m, reactions: evt.reactions } : m
+            ),
+          };
+        });
       } else if (evt.type === "presence") {
         setConversations((prev) =>
           prev.map((c) => ({
@@ -126,6 +137,7 @@ export default function ChatPage() {
       content,
       status: "sending",
       created_at: new Date().toISOString(),
+      reactions: [],
     };
     setMessagesByConv((prev) => ({ ...prev, [activeId]: [...(prev[activeId] || []), optimistic] }));
 
@@ -156,6 +168,19 @@ export default function ChatPage() {
     setShowNewGroup(false);
     refreshConversations();
     selectConversation(conv.id);
+  }
+
+  async function handleReact(messageId: number, emoji: string) {
+    if (!activeId || messageId < 0) return; // skip optimistic (not-yet-persisted) messages
+    try {
+      const reactions = await api.toggleReaction(activeId, messageId, emoji);
+      setMessagesByConv((prev) => ({
+        ...prev,
+        [activeId]: (prev[activeId] || []).map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+      }));
+    } catch {
+      // ignore — the websocket event will reconcile state if it did succeed server-side
+    }
   }
 
   async function handleAddMembers(usernames: string[]) {
@@ -202,6 +227,7 @@ export default function ChatPage() {
           onSend={handleSend}
           onTyping={(isTyping) => sendTyping(activeConversation.id, isTyping)}
           onOpenInfo={() => setShowInfo(true)}
+          onReact={handleReact}
         />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center bg-[var(--chat-bg)] text-[var(--text-secondary)]">
@@ -223,7 +249,7 @@ export default function ChatPage() {
       )}
 
       {toast && (
-        <div className="toast-enter fixed top-4 right-4 bg-white border border-[var(--sidebar-border)] shadow-lg rounded-lg px-4 py-2.5 text-sm flex items-center gap-2">
+        <div className="toast-enter fixed top-4 right-4 bg-[var(--sidebar-bg)] border border-[var(--sidebar-border)] shadow-lg rounded-lg px-4 py-2.5 text-sm flex items-center gap-2">
           <MessageSquare size={14} className="text-[var(--signal-blue)]" />
           {toast}
         </div>
