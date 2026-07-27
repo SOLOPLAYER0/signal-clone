@@ -96,7 +96,7 @@ export default function ChatWindow({
           </div>
         )}
         {messages.map((m, idx) => {
-          const dateStr = new Date(m.created_at).toDateString();
+          const dateStr = new Date(m.created_at + "Z").toDateString();
           const showDivider = dateStr !== lastDate;
           lastDate = dateStr;
           const isOwn = m.sender_id === currentUser.id;
@@ -108,7 +108,7 @@ export default function ChatWindow({
               {showDivider && (
                 <div className="flex items-center justify-center my-3">
                   <span className="text-[11px] bg-white text-[var(--text-secondary)] px-3 py-1 rounded-full shadow-sm">
-                    {new Date(m.created_at).toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}
+                    {new Date(m.created_at + "Z").toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}
                   </span>
                 </div>
               )}

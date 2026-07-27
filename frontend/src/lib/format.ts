@@ -1,5 +1,12 @@
 import { Conversation, User } from "./types";
 
+function toDate(iso: string): Date {
+  // Backend sends naive UTC timestamps without a timezone suffix —
+  // explicitly mark them as UTC so the browser converts to local time correctly.
+  const hasTimezone = /[Zz]|[+-]\d{2}:\d{2}$/.test(iso);
+  return new Date(hasTimezone ? iso : iso + "Z");
+}
+
 export function conversationTitle(conv: Conversation, currentUserId: number): string {
   if (conv.type === "group") return conv.name || "Unnamed group";
   const other = conv.members.find((m) => m.user.id !== currentUserId);
@@ -11,7 +18,7 @@ export function otherMember(conv: Conversation, currentUserId: number): User | u
 }
 
 export function formatTime(iso: string): string {
-  const d = new Date(iso);
+  const d = toDate(iso);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
   if (sameDay) return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -27,11 +34,11 @@ export function formatTime(iso: string): string {
 }
 
 export function formatMessageTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return toDate(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 export function lastSeenLabel(iso: string): string {
-  const d = new Date(iso);
+  const d = toDate(iso);
   const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
   if (diffMin < 1) return "just now";
   if (diffMin < 60) return `${diffMin}m ago`;
