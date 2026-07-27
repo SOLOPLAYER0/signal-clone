@@ -27,7 +27,7 @@ Built as an SDE Fullstack assignment.
 
 ### System overview
 
-![High-level architecture diagram](docs/hld-diagram.svg)
+![High-level architecture diagram](docs/hld-diagram.png)
 
 - **One backend process, one database file, one WebSocket endpoint.** There's
   no message queue, cache layer, or separate real-time service — for this
